@@ -38,7 +38,7 @@
 
 - **Accessing Chat Channels**: Use the designated keys or commands to switch between chat channels.
 - **Sending Messages**: Type your message and press Enter to send it to the active channel.
-- **Roleplay Actions**: Use commands like `/me [action]` to perform roleplay actions visible to nearby players.
+- **Roleplay Actions**: Use commands like `/me [action]`   `/say [action]`   `/post [action]` `/posta [action]` `/pol [action]`  `/amb [action]` `/mechad [action]`  `/towad [action]`  to perform roleplay actions visible to nearby players.
 
 ## Configuration
 
