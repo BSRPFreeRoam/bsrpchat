@@ -1,6 +1,3 @@
-Certainly! Here's a README template for the `bsrpchat` repository:
-
----
 
 # BSRPChat
 
