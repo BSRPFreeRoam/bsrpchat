@@ -13,54 +13,109 @@ local function GetRealPlayerName(source)
 end
 
 -- Roleplay Commands Start --
+-- QBCore.Commands.Add('me', 'Show local message', {{name = 'message', help = 'Message to respond with'}}, false, function(source, args)
+--     if #args < 1 then exports['dillen-notifications']:sendNotification({title = "Action", message = '/me', type = "All arguments must be present!", duration = 5000}) return end
+--     local ped = GetPlayerPed(source)
+--     local pCoords = GetEntityCoords(ped)
+--     local msg = "* " .. '**' .. table.concat(args, ' '):gsub('[~<].-[>~]', '') .. " **"
+--     local Players = QBCore.Functions.GetPlayers()
+--     for i=1, #Players do
+--         local Player = Players[i]
+--         local target = GetPlayerPed(Player)
+--         local tCoords = GetEntityCoords(target)
+--         if target == ped or #(pCoords - tCoords) < 20 then
+--             TriggerClientEvent('QBCore:Command:3dMe', Player, source, msg)
+--         end
+--     end
+-- end, 'user')
+
 QBCore.Commands.Add('me', 'Show local message', {{name = 'message', help = 'Message to respond with'}}, false, function(source, args)
-    if #args < 1 then exports['dillen-notifications']:sendNotification({title = "Action", message = '/me', type = "All arguments must be present!", duration = 5000}) return end
-    local ped = GetPlayerPed(source)
-    local pCoords = GetEntityCoords(ped)
-    local msg = "* " .. 'ME | ' .. table.concat(args, ' '):gsub('[~<].-[>~]', '') .. " *"
-    local Players = QBCore.Functions.GetPlayers()
-    for i=1, #Players do
-        local Player = Players[i]
-        local target = GetPlayerPed(Player)
-        local tCoords = GetEntityCoords(target)
-        if target == ped or #(pCoords - tCoords) < 20 then
-            TriggerClientEvent('QBCore:Command:3dMe', Player, source, msg)
+    local Player = QBCore.Functions.GetPlayer(source)
+    
+    -- Check if the player has provided a message argument
+    if #args < 1 then
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-message"><strong style="color: red;">Action</strong>: /me requires a message argument!</div>',
+            args = {}
+        })
+        return
+    end
+
+    -- Check if the player has at least $1 in their bank account
+    if Player.Functions.GetMoney('bank') >= 1 then
+        -- Deduct $1 from the player's bank account
+        Player.Functions.RemoveMoney('bank', 1)
+
+        local ped = GetPlayerPed(source)
+        local pCoords = GetEntityCoords(ped)
+        local msg = "* " .. '**' .. table.concat(args, ' '):gsub('[~<].-[>~]', '') .. " **"
+        local Players = QBCore.Functions.GetPlayers()
+
+        -- Send the message to nearby players
+        for i = 1, #Players do
+            local TargetPlayer = Players[i]
+            local target = GetPlayerPed(TargetPlayer)
+            local tCoords = GetEntityCoords(target)
+
+            -- If the target player is within 20 meters, show the message
+            if target == ped or #(pCoords - tCoords) < 20 then
+                TriggerClientEvent('QBCore:Command:3dMe', TargetPlayer, source, msg)
+            end
         end
+
+        -- Notify the player of the action success
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-message"><strong style="color: green;">Success</strong>: Your message has been sent, $1 has been deducted from your bank.</div>',
+            args = {}
+        })
+    else
+        -- Notify the player if they don't have enough money
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-message"><strong style="color: red;">Insufficient Funds</strong>: You need $1 in your bank to use /me.</div>',
+            args = {}
+        })
     end
 end, 'user')
-
 
 
 -- Initialize server funds (this can be stored in a database or a global variable)
 local serverFunds = 0
 QBCore.Commands.Add("say", "Send a Message", {}, false, function(source, args, rawCommand)
     local Player = QBCore.Functions.GetPlayer(source)
-    local playerName = GetRealPlayerName(source)
-    local msg = rawCommand:sub(5)
-    local formattedTime = os.date('%H:%M')
+    local playerName = Player.PlayerData.charinfo.firstname .. " " .. Player.PlayerData.charinfo.lastname  -- Combine first and last name
+    local msg = rawCommand:sub(5)  -- Extracts the message after the command
+    local formattedTime = os.date('%H:%M')  -- Formats the time in hours and minutes
 
     -- Check if the player has at least $1 in their bank
     if Player.Functions.GetMoney('bank') >= 1 then
         -- Deduct $1 from the player's bank account
         Player.Functions.RemoveMoney('bank', 1)
 
-        -- Add $1 to server funds
+        -- Add $1 to server funds (assuming `serverFunds` is a global variable)
         serverFunds = serverFunds + 1
 
-        -- Send message to in-game chat
+        -- Send message to in-game chat with a cloud icon
         TriggerClientEvent('chat:addMessage', -1, {
             template = '<div class="chat-say say"><i class="fas fa-cloud"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">{0}</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{2}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{1}</div></div>',
             args = { playerName, msg, formattedTime }
         })
 
-        -- Notify the player of successful posting
-        TriggerClientEvent('dillen-notifications:sendNotification', source, { message = "Your message has been posted. $1 has been added to server funds.", type = "money", title = "Message Sent", duration = 4000 })
+        -- Send message to the player confirming their message has been posted and $1 added to server funds
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-say say"><b><span style="color: green;">[Message Sent]</span></b> Your message has been posted. $1 has been added to server funds.</div>',
+            args = {}
+        })
 
     else
-        -- Notify the player if they don't have enough money in their bank
-        TriggerClientEvent('dillen-notifications:sendNotification', source, { message = "You need $1 in your bank to send a message.", type = "money", title = "Insufficient Funds", duration = 4000 })
+        -- Send insufficient funds message to the player in chat
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-say say"><div class="chat-message-body"><strong style="color: red;">Insufficient Funds</strong>: You need $1 in your bank to send a message.</div></div>',
+            args = {}
+        })
     end
 end, "user")
+
+
 
 local discords = ""  -- Replace with your actual Discord webhook URL
 
@@ -68,16 +123,18 @@ local discords = ""  -- Replace with your actual Discord webhook URL
 
  QBCore.Commands.Add("post", "Send a Lifeinvader Post", {}, false, function(source, args, rawCommand)
     local Player = QBCore.Functions.GetPlayer(source)
-    local playerName = GetRealPlayerName(source)
-    local msg = table.concat(args, ' ')
-    local formattedTime = os.date('%H:%M')
+    local firstName = Player.PlayerData.charinfo.firstname
+    local lastName = Player.PlayerData.charinfo.lastname
+    local playerName = firstName .. " " .. lastName
+    local msg = table.concat(args, ' ')  -- The message the player types
+    local formattedTime = os.date('%H:%M')  -- Time in 24-hour format
 
     -- Check if the player has enough money
     if Player.Functions.GetMoney('cash') >= 10 then
         -- Deduct $10 from the player's cash
         Player.Functions.RemoveMoney('cash', 10)
 
-        -- Send message to in-game chat
+        -- Send message to in-game chat with a cloud-like icon
         TriggerClientEvent('chat:addMessage', -1, {
             template = '<div class="chat-say say"><i class="fas fa-cloud"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">LifeInvader - {0}</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{2}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{1}</div></div>',
             args = { playerName, msg, formattedTime }
@@ -104,10 +161,14 @@ local discords = ""  -- Replace with your actual Discord webhook URL
         end, 'POST', json.encode({ username = "LifeInvader Bot", embeds = embed }), { ['Content-Type'] = 'application/json' })
 
     else
-        -- Notify the player if they don't have enough money
-        lib.notify(source, { title = 'Insufficient Funds', description = 'You need $10 to post a message.', type = 'error', duration = 4000 })
+        -- Notify the player in the chat if they don't have enough money
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-error"><b><span style="color: red;">[LifeInvader] You need $10 to post a message.</span></b></div>',
+            args = {}
+        })
     end
 end, "user")
+
 
 
 QBCore.Commands.Add("posta", "Send an Anonymous Lifeinvader Post", {}, false, function(source, args, rawCommand)
@@ -120,9 +181,9 @@ QBCore.Commands.Add("posta", "Send an Anonymous Lifeinvader Post", {}, false, fu
         -- Deduct $10 from the player's cash
         Player.Functions.RemoveMoney('cash', 10)
 
-        -- Send message to in-game chat
+        -- Send message to in-game chat (broadcast post to all players)
         TriggerClientEvent('chat:addMessage', -1, {
-            template = '<div class="chat-say say"><i class="fas fa-cloud"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">LifeInvader - Anonymous</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{1}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{0}</div></div>',
+            template = '<div class="chat-cloud"><i class="fas fa-cloud"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">LifeInvader - Anonymous</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{1}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{0}</div></div>',
             args = { msg, formattedTime }
         })
 
@@ -148,11 +209,13 @@ QBCore.Commands.Add("posta", "Send an Anonymous Lifeinvader Post", {}, false, fu
 
     else
         -- Notify the player if they don't have enough money
-        TriggerClientEvent('dillen_notify:sendNotification', source, {title = "Lifeinvader", message = "You need $10 to post a message.", type = "loops",  duration = 5000})
-
-   
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-cloud"><i class="fas fa-cloud"></i> <b><span style="color: #ff0000;">Error</span></b><div style="margin-top: 5px; font-weight: 300;">You don\'t have enough money to post. You need $10.</div></div>',
+            args = {}
+        })
     end
 end, "user")
+
 
 
 
@@ -169,39 +232,54 @@ end, "user")
 QBCore.Commands.Add("Taxi", "", {}, false, function(source, args, rawCommand)
     local msg = table.concat(args, ' ')  -- Get the message from args
     local src = source
-    local Player = QBCore.Functions.GetPlayer(src) -- Takes player information
-    local playerName = GetRealPlayerName(src) -- Get Player Name In Game
-    local time = os.date('%H:%M')  -- Use 24-hour format
+    local Player = QBCore.Functions.GetPlayer(src) -- Get player information
+    local playerName = GetRealPlayerName(src) -- Get player name in-game
+    local time = os.date('%H:%M')  -- Use 24-hour format for time
 
+    -- Check if the player is a taxi driver and on duty
     if Player.PlayerData.job.name == "taxi" and Player.PlayerData.job.onduty then
-        -- Send message to in-game chat
-        TriggerClientEvent('chat:addMessage', -1, {
-            template = '<div class="chat-taxi"><i class="fas fa-taxi"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">{0}</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{2}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{1}</div></div>',
-            args = { playerName, msg, time }
-        })
+        -- Check if the player has enough money (e.g., $10) to post the message
+        if Player.Functions.GetMoney('cash') >= 10 then
+            -- Deduct the cost for posting a message
+            Player.Functions.RemoveMoney('cash', 10)
 
-        -- Send the message to the webhook
-        local discordWebhook = ""
-        PerformHttpRequest(discordWebhook, function(statusCode, response, headers)
-            if statusCode ~= 204 then
-                print("Error sending Discord message: " .. statusCode)
-            end
-        end, 'POST', json.encode({
-            username = "Los Santo's Taxi Company",
-            embeds = {{
-                title = "Los Santo's Taxi Company",
-                description = playerName .. " sent a message: " .. msg,
-                color = 16776960, -- Yellow color (decimal) of the embed
-                author = {
-                    name = playerName,
-                    icon_url = "https://kappa.lol/utBSI.2024-04-30-1714484744.png" -- URL to the player's avatar
-                }
-            }}
-        }), { ['Content-Type'] = 'application/json' })
+            -- Send message to in-game chat
+            TriggerClientEvent('chat:addMessage', -1, {
+                template = '<div class="chat-taxi"><i class="fas fa-taxi"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">{0}</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{2}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{1}</div></div>',
+                args = { playerName, msg, time }
+            })
+
+            -- Send the message to the Discord webhook
+            local discordWebhook = ""
+            PerformHttpRequest(discordWebhook, function(statusCode, response, headers)
+                if statusCode ~= 204 then
+                    print("Error sending Discord message: " .. statusCode)
+                end
+            end, 'POST', json.encode({
+                username = "Los Santo's Taxi Company",
+                embeds = {{
+                    title = "Los Santo's Taxi Company",
+                    description = playerName .. " sent a message: " .. msg,
+                    color = 16776960, -- Yellow color (decimal) of the embed
+                    author = {
+                        name = playerName,
+                        icon_url = "https://kappa.lol/utBSI.2024-04-30-1714484744.png" -- URL to the player's avatar
+                    }
+                }}
+            }), { ['Content-Type'] = 'application/json' })
+        else
+            -- Notify the player they don't have enough money to post the message
+            TriggerClientEvent('chat:addMessage', src, {
+                template = '<div class="chat-error"><b><span style="color: #FF0000;">You need $10 to post a message.</span></b></div>',
+                args = {}
+            })
+        end
     else
-        -- Notify player that they don't have the Taxi job
-        TriggerClientEvent("fl:notify", src, "BSRP FreeRoam", "Los Santo's Taxi Company", "You don't have the job Taxi", 5000, 3, 3)
-        TriggerClientEvent('dillen_notify:sendNotification', source, {title = "Los Santo's Taxi Company", message = "You need $10 to post a message.", type = "loops",  duration = 5000})
+        -- Notify player they don't have the Taxi job or aren't on duty
+        TriggerClientEvent('chat:addMessage', src, {
+            template = '<div class="chat-error"><b><span style="color: #FF0000;">You don\'t have the Taxi job or you\'re not on duty.</span></b></div>',
+            args = {}
+        })
     end
 end, "user")
 
@@ -218,10 +296,10 @@ QBCore.Commands.Add("pol", "Police Ad Command", {}, false, function(source, args
         "leo"
     }
 
-    -- Check if player's job is in the allowed jobs list
+    -- Check if player's job is in the allowed jobs list and if they are on duty
     local isAllowedJob = false
     for _, job in ipairs(allowedJobs) do
-        if Player.PlayerData.job.type == "leo" and Player.PlayerData.job.onduty then
+        if Player.PlayerData.job.name == job and Player.PlayerData.job.onduty then
             isAllowedJob = true
             break
         end
@@ -235,9 +313,13 @@ QBCore.Commands.Add("pol", "Police Ad Command", {}, false, function(source, args
         })
     else
         -- Notify player that they are not in an allowed job or not on duty
-        TriggerClientEvent("fl:notify", src, "BSRP FreeRoam", "Police Ad", "You are not authorized or not on duty", 5000, 5, 3)
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-police"><div class="chat-message-body"><strong>Dispatch</strong>: You are not authorized or not on duty.</div></div>',
+            args = { "1" }  -- This can be customized further if needed
+        })
     end
 end, "user")
+
 
 
 QBCore.Commands.Add("amb", "EMS Ad Command", {}, false, function(source, args, rawCommand)
@@ -247,25 +329,22 @@ QBCore.Commands.Add("amb", "EMS Ad Command", {}, false, function(source, args, r
     local playerName = GetRealPlayerName(src) -- Get player name in game
     local time = os.date('%H:%M')  -- Use 24-hour format for timestamp
 
-    -- Check if the player is an EMS and on duty
-    if Player.PlayerData.job.name == "ambulance" and Player.PlayerData.job.name == "fire" and Player.PlayerData.job.onduty then
+    -- Check if the player is either EMS (ambulance) or Fire and on duty
+    if (Player.PlayerData.job.name == "ambulance" or Player.PlayerData.job.name == "fire") and Player.PlayerData.job.onduty then
         -- Send message to in-game chat
         TriggerClientEvent('chat:addMessage', -1, {
             template = '<div class="chat-ems ems"><i class="fas fa-heartbeat"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">{0}</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{2}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{1}</div></div>',
             args = { playerName, msg, time }
         })
     else
-        -- Notify the player if they are not EMS or not on duty using pNotify
-        exports['pNotify']:SendNotification({
-            title = 'BSRP FreeRoam - EMS',
-            text = 'You are not EMS or not on duty',
-            theme = 'tcg',
-            type = 'error',
-            layout = 'centerRight',
-            timeout = 4000
+        -- Notify the player if they are not EMS or not on duty
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-ems"><div class="chat-message-body"><strong>Dispatch</strong>: You are not EMS or not on duty.</div></div>',
+            args = { "1" }  -- You can customize this message as needed
         })
     end
 end, "user")
+
 
 
 QBCore.Commands.Add('mechad', 'Post Mechanic Ad', {}, false, function(source, args, rawCommand)
@@ -274,28 +353,39 @@ QBCore.Commands.Add('mechad', 'Post Mechanic Ad', {}, false, function(source, ar
     local msg = table.concat(args, ' ')
     local time = os.date('%I:%M')
 
+    -- Check if the player is a mechanic and on duty
     if Player.PlayerData.job.name == "mechanic" and Player.PlayerData.job.onduty then
         if Player.Functions.GetMoney('cash') >= 10 then
             Player.Functions.RemoveMoney('cash', 10)
+            -- Send message to in-game chat
             TriggerClientEvent('chat:addMessage', -1, {
                 template = '<div class="chat-mechanic mechanic"><i class="fas fa-cogs"></i> <b><span style="color: #ffffff">{0}</span> <span style="font-size: 14px; color: #e1e1e1;">{2}</span></b><div style="margin-top: 5px; font-weight: 300;">{1}</div></div>',
                 args = { playerName, msg, time }
             })
         else
-            exports['dillen-notifications']:sendNotification({title = "Mechanic Ad", message = 'You need $10 to post an ad.', type = "item", duration = 5000})
+            -- Notify player if they don't have enough money
+            TriggerClientEvent('chat:addMessage', source, {
+                template = '<div class="chat-mechanic"><div class="chat-message-body"><strong>Mechanic Ad</strong>: You need $10 to post an ad.</div></div>',
+                args = { "1" }  -- Customize the message as needed
+            })
         end
     else
-        exports['dillen-notifications']:sendNotification({title = "Mechanic Ad", message = 'You must be a mechanic on duty to post an ad.', type = "item", duration = 5000})
+        -- Notify player if they are not a mechanic or not on duty
+        TriggerClientEvent('chat:addMessage', source, {
+            template = '<div class="chat-mechanic"><div class="chat-message-body"><strong>Mechanic Ad</strong>: You must be a mechanic on duty to post an ad.</div></div>',
+            args = { "1" }  -- Customize the message as needed
+        })
     end
 end, "user")
 
+
 QBCore.Commands.Add('towad', 'Tow Ad Command', {}, false, function(source, args, rawCommand)
-    args = table.concat(args, ' ')
+    args = table.concat(args, ' ')  -- Get the full message
     local src = source
-    local Player = QBCore.Functions.GetPlayer(src) -- Takes player information
-    local playerName = GetRealPlayerName(src) -- Get Player Name In Game
-    local msg = rawCommand:sub(9)
-    local time = os.date('%I:%M')
+    local Player = QBCore.Functions.GetPlayer(src) -- Get player information
+    local playerName = GetRealPlayerName(src) -- Get player name in game
+    local msg = rawCommand:sub(9)  -- Remove the command prefix
+    local time = os.date('%I:%M')  -- Use 12-hour format for time
     
     -- Check if the player is a tow and on duty
     if Player.PlayerData.job.name == "tow" and Player.PlayerData.job.onduty then
@@ -306,12 +396,12 @@ QBCore.Commands.Add('towad', 'Tow Ad Command', {}, false, function(source, args,
 
             -- Send the message to all players
             TriggerClientEvent('chat:addMessage', -1, {
-                template = '<div class="chat-mechanic mechanic"><i class="fa-regular fa-truck-tow"></i> <b><span style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #ffffff">{0}</span>&nbsp;<span style="font-size: 14px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; color: #e1e1e1;">{2}</span></b><div style="text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; margin-top: 5px; font-weight: 300;">{1}</div></div>',
+                template = '<div class="chat-mechanic mechanic"><i class="fa-regular fa-truck-tow"></i> <b><span style="color: #ffffff">{0}</span> <span style="font-size: 14px; color: #e1e1e1;">{2}</span></b><div style="margin-top: 5px; font-weight: 300;">{1}</div></div>',
                 args = { playerName, msg, time }
             })
 
-            -- Send the message to the webhook
-            local discordWeb = ""
+            -- Send the message to the Discord webhook
+            local discordWeb = "https://discord.com/api/webhooks/1234865568105107465/rKP5Crxqj6KtwV8TWrvnVRMLuCqTFOQTUYoEeDZDlvRCojUO2cyvTuKcKsPvB-RG1tFq"
             PerformHttpRequest(discordWeb, function(statusCode, response, headers) end, 'POST', json.encode({
                 embeds = {{
                     title = "Los Santo's Auto Work's",
@@ -325,15 +415,20 @@ QBCore.Commands.Add('towad', 'Tow Ad Command', {}, false, function(source, args,
             }), { ['Content-Type'] = 'application/json' })
         else
             -- Notify the player they don't have enough money
-            lib.notify(src, { title = 'BSRP FreeRoam - Tow Ad', description = 'You don\'t have enough money. $10 is required to post an ad.', type = 'error', duration = 4000 })
-            TriggerClientEvent('pNotify:SendNotification', src, { text = "<i class='fa-regular fa-truck-tow'></i> BSRP FreeRoam - Tow Ad <br/><br/>You don't have enough money. $10 is required to post an ad.", type = "info", layout = "centerLeft", timeout = 4000 })
+            TriggerClientEvent('chat:addMessage', src, {
+                template = '<div class="chat-mechanic"><div class="chat-message-body"><strong>Tow Ad</strong>: You don\'t have enough money. $10 is required to post an ad.</div></div>',
+                args = { "1" }  -- Customize the message as needed
+            })
         end
     else
         -- Notify the player they're not on duty or not a tow
-        lib.notify(src, { title = 'BSRP FreeRoam - Tow Ad', description = 'You are not active as a tow. Must be on duty.', type = 'error', duration = 4000 })
-        TriggerClientEvent('pNotify:SendNotification', src, { text = "<i class='fa-regular fa-truck-tow'></i> BSRP FreeRoam - Tow Ad <br/><br/>You are not active as a tow. Must be on duty.", type = "info", layout = "centerLeft", timeout = 4000 })
+        TriggerClientEvent('chat:addMessage', src, {
+            template = '<div class="chat-mechanic"><div class="chat-message-body"><strong>Tow Ad</strong>: You are not active as a tow. Must be on duty.</div></div>',
+            args = { "1" }  -- Customize the message as needed
+        })
     end
 end, "user")
+
 
 -- Job Commands End --
 
@@ -393,3 +488,6 @@ QBCore.Commands.Add("clearall", "Clear Chat to all the players",  { }, true ,fun
 end, "god")
 
 -- Admin Chat | Commands End--QBCore.Functions.LoadParticleDictionary(dictionary)
+
+
+
